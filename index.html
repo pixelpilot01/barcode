@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Barcode Generator</title>
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.0/dist/JsBarcode.all.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            document.getElementById('generate').addEventListener('click', function () {
+                const data = document.getElementById('dataInput').value;
+                const formatInput = document.querySelector('input[name="format"]:checked');
+                let format = formatInput ? formatInput.value : 'CODE128'; // Default to CODE128
+
+                // Clear previous messages
+                document.getElementById('message').innerText = '';
+
+                // Simple validation for barcode length requirements
+                if (!validateInput(format, data)) {
+                    return; // Exit if validation fails
+                }
+
+                JsBarcode('#barcode', data, { format: format });
+            });
+
+            document.getElementById('clear').addEventListener('click', function () {
+                document.getElementById('dataInput').value = ''; // Clear the data input
+                document.getElementById('message').innerText = ''; // Clear the message
+                location.reload(); // Refresh the page to reset everything
+            });
+        });
+
+        function validateInput(format, data) {
+            const formatLength = {
+                'EAN8': 8,
+                'EAN13': 13,
+                // ... other formats and their lengths
+            };
+
+            if (format in formatLength) {
+                const length = formatLength[format];
+                if (Array.isArray(length)) {
+                    if (!length.includes(data.length)) {
+                        displayError(`Data for ${format} must be ${length.join(' or ')} digits long and must be in the correct format, otherwise no barcode will generate.`);
+                        return false;
+                    }
+                } else {
+                    if (data.length !== length) {
+                        displayError(`Data for ${format} must be ${length} digits long and must be in the correct format, otherwise no barcode will generate.`);
+                        return false;
+                    }
+                }
+            }
+
+            return true; // All is well
+        }
+
+        function displayError(message) {
+            document.getElementById('barcode').innerHTML = ''; // Clear the barcode
+            document.getElementById('message').innerText = message; // Display the error message
+        }
+
+    </script>
+</head>
+
+<body>
+    <h3>Generate Barcode</h3>
+    <div>
+        <label><input type="radio" name="format" value="CODE128" checked> Code 128</label>
+        <label><input type="radio" name="format" value="CODE39"> Code 39</label>
+        <label><input type="radio" name="format" value="EAN8"> EAN-8</label>
+        <label><input type="radio" name="format" value="EAN13"> EAN-13</label>
+    </div>
+    <div>
+        <input type="text" id="dataInput" placeholder="Enter data here">
+        <button id="generate">Generate Barcode</button>
+        <button id="clear">Clear</button>
+    </div>
+    <p id="message" style="color: red;"></p> <!-- Message for alerts -->
+    <svg id="barcode"></svg>
+</body>
+
+</html>
